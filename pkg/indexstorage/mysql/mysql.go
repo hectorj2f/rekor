@@ -40,6 +40,13 @@ const (
 	)`
 )
 
+var (
+	MaxIdleConns    int           `envconfig:"SQL_MAX_IDLE_CONNS" default:"250"`
+MaxOpenConns    int           `envconfig:"SQL_MAX_OPEN_CONNS" default:"1000"`
+ConnMaxIdleTime time.Duration `envconfig:"SQL_CONN_MAX_IDLE_TIME" default:"5m"`
+ConnMaxLifetime time.Duration `envconfig:"SQL_CONN_MAX_LIFETIME" default:"35m"`
+)
+
 // IndexStorageProvider implements indexstorage.IndexStorage
 type IndexStorageProvider struct {
 	db *sqlx.DB
@@ -49,6 +56,11 @@ func NewProvider(dsn string, opts ...Options) (*IndexStorageProvider, error) {
 	var err error
 	provider := &IndexStorageProvider{}
 	provider.db, err = sqlx.Open(ProviderType, dsn)
+	provider.db.SetMaxIdleConns(env.MaxIdleConns)
+	provider.db.SetMaxOpenConns(env.MaxOpenConns)
+	provider.db.SetConnMaxIdleTime(env.ConnMaxIdleTime)
+	provider.db.SetConnMaxLifetime(env.ConnMaxLifetime)
+
 	if err != nil {
 		return nil, err
 	}
